@@ -4,6 +4,31 @@ EcoSphere is a premium, state-of-the-art Carbon Footprint Tracker and Sustainabi
 
 ---
 
+## 🔗 Live Demo & Deployment
+
+You can deploy EcoSphere with one click to Vercel:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fsoham53crtl%2Fcarbon-footprint-tracker-ai)
+
+*Once deployed, you can access your live application link here: [https://carbon-footprint-tracker-ai.vercel.app](https://carbon-footprint-tracker-ai.vercel.app)*
+
+---
+
+## 📸 Screenshots
+
+Here is a visual tour of the EcoSphere experience:
+
+### 1. Interactive Action Dashboard
+![Dashboard Screenshot](/public/screenshots/dashboard.png)
+
+### 2. Onboarding Carbon Baseline Calculator
+![Calculator Screenshot](/public/screenshots/calculator.png)
+
+### 3. AI Eco Chatbot
+![Chatbot Screenshot](/public/screenshots/chatbot.png)
+
+---
+
 ## 🌟 Key Features
 
 1. **Intelligent Baseline Calculator**
@@ -28,7 +53,25 @@ EcoSphere is a premium, state-of-the-art Carbon Footprint Tracker and Sustainabi
 
 ---
 
-## 🛠️ Architecture & Tech Stack
+## 📐 System Architecture
+
+Below is the conceptual architecture diagram of the EcoSphere platform:
+
+```mermaid
+graph TD
+    User([User Client]) -->|Interacts| Frontend[Next.js Frontend / React 19]
+    Frontend -->|HTTP Requests| API[Next.js API Routes /app/api/*]
+    API -->|Process & Compute| Engine[Carbon Engine lib/calculations.ts]
+    API -->|Atomic Reads/Writes| DB[JSON DB lib/db/json-db.ts]
+    API -->|Query API| Gemini[Gemini API / Rule Fallback]
+    Engine -->|Calculates Metrics| Frontend
+    Gemini -->|Generates Tips| Frontend
+    DB -->|Stores States| Frontend
+```
+
+---
+
+## 🛠️ Tech Stack & Decisions
 
 - **Core**: Next.js 15 (App Router), React 19, TypeScript
 - **Styling**: Tailwind CSS with customized glassmorphic variables, micro-animations, and fluid responsive design tokens
