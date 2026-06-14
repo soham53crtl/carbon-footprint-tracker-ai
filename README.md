@@ -53,6 +53,12 @@ Here is a visual tour of the EcoSphere experience:
 
 ---
 
+## 📊 Calculation Methodology
+
+EcoSphere uses standard environmental coefficients to calculate emissions. For a detailed breakdown of mathematical formulas, coefficients, and scientific references, please see the [Calculation Methodology Documentation](docs/calculations.md).
+
+---
+
 ## 📐 System Architecture
 
 Below is the conceptual architecture diagram of the EcoSphere platform:

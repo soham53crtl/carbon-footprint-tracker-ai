@@ -1,0 +1,32 @@
+name: EcoSphere CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm install --legacy-peer-deps
+
+    - name: Run unit tests
+      run: npm test
+
+    - name: Build production bundle
+      run: npm run build
+      env:
+        JWT_SECRET: "ci_testing_secret_phrase_at_least_32_characters_long"
