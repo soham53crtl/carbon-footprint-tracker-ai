@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb, User } from '@/lib/db/json-db';
 import { hashPassword, verifyPassword, signToken, setSessionCookie, clearSessionCookie, getSessionUser } from '@/lib/auth/auth-service';
 
-// ── Helper: shape a safe user object for client ───────────────────────────────
 function safeUser(u: User) {
   return {
     id: u.id,
@@ -10,25 +9,24 @@ function safeUser(u: User) {
     userName: u.userName,
     level: u.level,
     xp: u.xp,
-    greenCoins: u.xp,                     // Coins = total XP accumulated
+    greenCoins: u.xp,
     streak: u.streakCount,
     totalCO2Saved: u.cumulativeSavings,
     unlockedBadges: u.unlockedBadges,
     theme: u.theme,
     baselineFootprint: u.hasCalculated ? u.totalFootprint : null,
     baselineBreakdown: u.hasCalculated ? u.footprintByCategories : null,
-    weeklyGoalKg: 15,                      // default
+    weeklyGoalKg: 15,
     monthlySavings: [],
   };
 }
 
-// ── GET: Check session / return profile ───────────────────────────────────────
 export async function GET(request: NextRequest) {
   const session = getSessionUser(request);
   if (!session) {
     return NextResponse.json({ authenticated: false, error: 'Not authenticated' }, { status: 401 });
   }
-  const db = readDb();
+  const db = await readDb();
   const user = db.users.find((u) => u.id === session.userId);
   if (!user) {
     return NextResponse.json({ authenticated: false, error: 'User not found' }, { status: 404 });
@@ -36,19 +34,16 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ authenticated: true, user: safeUser(user) });
 }
 
-// ── POST: signup | register | login | logout ──────────────────────────────────
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    // Support both "signup" (legacy) and "register" (new frontend)
     const action: string = body.action;
     const email: string | undefined = body.email;
     const password: string | undefined = body.password;
     const userName: string = body.name || body.userName || '';
 
-    const db = readDb();
+    const db = await readDb();
 
-    // ── 1. REGISTER / SIGNUP ─────────────────────────────────────────────────
     if (action === 'register' || action === 'signup') {
       if (!email || !password || !userName.trim()) {
         return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
@@ -91,7 +86,7 @@ export async function POST(request: NextRequest) {
       };
 
       db.users.push(newUser);
-      writeDb(db);
+      await writeDb(db);
 
       const token = signToken({ userId: newUser.id, email: newUser.email, userName: newUser.userName });
       const response = NextResponse.json({ success: true, token, user: safeUser(newUser) }, { status: 201 });
@@ -99,7 +94,6 @@ export async function POST(request: NextRequest) {
       return response;
     }
 
-    // ── 2. LOGIN ─────────────────────────────────────────────────────────────
     if (action === 'login') {
       if (!email || !password) {
         return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
@@ -109,7 +103,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
       }
 
-      // Reset daily offset if new day; check streak
       const today = new Date().toISOString().split('T')[0];
       if (user.lastActiveDate !== today) {
         const last = new Date(user.lastActiveDate);
@@ -118,7 +111,7 @@ export async function POST(request: NextRequest) {
         if (diffDays > 1) user.streakCount = 0;
         user.dailyOffset = 0;
         user.lastActiveDate = today;
-        writeDb(db);
+        await writeDb(db);
       }
 
       const token = signToken({ userId: user.id, email: user.email, userName: user.userName });
@@ -127,7 +120,6 @@ export async function POST(request: NextRequest) {
       return response;
     }
 
-    // ── 3. LOGOUT ────────────────────────────────────────────────────────────
     if (action === 'logout') {
       const response = NextResponse.json({ success: true });
       clearSessionCookie(response);

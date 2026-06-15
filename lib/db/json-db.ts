@@ -1,9 +1,4 @@
-import fs from 'fs';
-import path from 'path';
-
-// Define DB paths
-const DATA_DIR = path.join(process.cwd(), 'data');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
+import { kv } from '@vercel/kv';
 
 export interface User {
   id: string;
@@ -48,16 +43,16 @@ export interface Activity {
   category: string;
   co2Saved: number;
   xpGained: number;
-  timestamp: string; // ISO or local HH:MM
-  date: string; // YYYY-MM-DD
+  timestamp: string;
+  date: string;
 }
 
 export interface Goal {
   id: string;
   userId: string;
-  category: string; // 'general' | 'transport' | 'energy' | 'food' | 'waste'
-  targetValue: number; // Target carbon footprint in tonnes/yr or daily offset in kg
-  targetDate: string; // YYYY-MM-DD
+  category: string;
+  targetValue: number;
+  targetDate: string;
   currentProgress: number;
   completed: boolean;
   createdAt: string;
@@ -90,40 +85,24 @@ const DEFAULT_DB: DbSchema = {
   enrolledChallenges: [],
 };
 
-// Check and initialize the DB file
-function initializeDb() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(DB_FILE)) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(DEFAULT_DB, null, 2), 'utf-8');
-  }
-}
-
-// Read database contents
-export function readDb(): DbSchema {
-  initializeDb();
+export async function readDb(): Promise<DbSchema> {
   try {
-    const data = fs.readFileSync(DB_FILE, 'utf-8');
-    return JSON.parse(data);
+    const data = await kv.get<DbSchema>('ecosphere_db');
+    return data ?? DEFAULT_DB;
   } catch (error) {
-    console.error('Failed to read JSON DB, returning defaults:', error);
+    console.error('Failed to read KV DB:', error);
     return DEFAULT_DB;
   }
 }
 
-// Write database contents
-export function writeDb(data: DbSchema): void {
-  initializeDb();
+export async function writeDb(data: DbSchema): Promise<void> {
   try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    await kv.set('ecosphere_db', data);
   } catch (error) {
-    console.error('Failed to write to JSON DB:', error);
+    console.error('Failed to write KV DB:', error);
   }
 }
 
-// Clear database contents (used for testing)
-export function clearDb(): void {
-  initializeDb();
-  writeDb(DEFAULT_DB);
+export async function clearDb(): Promise<void> {
+  await writeDb(DEFAULT_DB);
 }
