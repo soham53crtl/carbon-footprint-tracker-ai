@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Leaf,
@@ -17,12 +17,19 @@ import {
   TreePine,
 } from 'lucide-react';
 import { SidebarNav } from '@/components/sidebar-nav';
-import { CalculatorModal } from '@/components/calculator-modal';
-import { EmissionsChart } from '@/components/charts/emissions-charts';
+import dynamic from 'next/dynamic';
+const CalculatorModal = dynamic(() => import('@/components/calculator-modal').then(m => m.CalculatorModal), {
+  loading: () => <div className="animate-pulse h-32 bg-gray-200 rounded-lg" />,
+  ssr: false,
+});
+const EmissionsChart = dynamic(() => import('@/components/charts/emissions-charts').then(m => m.EmissionsChart), {
+  loading: () => <div className="animate-pulse h-48 bg-gray-200 rounded-lg" />,
+  ssr: false,
+});
 import { useEcoApp } from '@/hooks/useEcoApp';
 import { BENCHMARKS, HABITS_DATABASE } from '@/lib/calculations';
 
-const NATIONAL_AVG = 7.5; // tonnes CO2e / yr
+const NATIONAL_AVG = 7.5;
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -75,6 +82,16 @@ export default function DashboardPage() {
     setLoadingRecs(false);
   };
 
+  const { fp, breakdown, vsGlobal, vsNational, totalSavedKg, treesEquiv } = useMemo(() => {
+    const fp = user?.baselineFootprint ?? 0;
+    const breakdown = user?.baselineBreakdown;
+    const vsGlobal = fp > 0 ? ((fp - BENCHMARKS.globalAverage) / BENCHMARKS.globalAverage) * 100 : 0;
+    const vsNational = fp > 0 ? ((fp - NATIONAL_AVG) / NATIONAL_AVG) * 100 : 0;
+    const totalSavedKg = activities.reduce((s, a) => s + a.co2Saved, 0);
+    const treesEquiv = parseFloat((totalSavedKg / 22).toFixed(1));
+    return { fp, breakdown, vsGlobal, vsNational, totalSavedKg, treesEquiv };
+  }, [user, activities]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -89,13 +106,6 @@ export default function DashboardPage() {
   }
 
   if (!user) return null;
-
-  const fp = user.baselineFootprint ?? 0;
-  const breakdown = user.baselineBreakdown;
-  const vsGlobal = fp > 0 ? ((fp - BENCHMARKS.globalAverage) / BENCHMARKS.globalAverage) * 100 : 0;
-  const vsNational = fp > 0 ? ((fp - NATIONAL_AVG) / NATIONAL_AVG) * 100 : 0;
-  const totalSavedKg = activities.reduce((s, a) => s + a.co2Saved, 0);
-  const treesEquiv = parseFloat((totalSavedKg / 22).toFixed(1));
 
   const STAT_CARDS = [
     {
@@ -154,7 +164,6 @@ export default function DashboardPage() {
     },
   ];
 
-  // Chart data
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const chartData = predictions?.monthly
     ? predictions.monthly.map((v, i) => ({ month: monthLabels[i], emissions: parseFloat(v.toFixed(2)) }))
@@ -182,7 +191,6 @@ export default function DashboardPage() {
       />
 
       <main className="flex-1 overflow-y-auto p-8 max-w-full">
-        {/* Header */}
         <div className="flex items-start justify-between mb-8 animate-fade-up">
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Dashboard</p>
@@ -213,7 +221,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* No baseline banner */}
         {!user.baselineFootprint && (
           <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white flex items-center justify-between animate-fade-up">
             <div>
@@ -229,7 +236,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8 stagger-children">
           {STAT_CARDS.map((c) => {
             const Icon = c.icon;
@@ -248,7 +254,6 @@ export default function DashboardPage() {
           })}
         </div>
 
-        {/* Charts row */}
         {fp > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div className="lg:col-span-2 bg-card border border-card-border rounded-2xl p-6 animate-fade-up">
@@ -268,7 +273,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Benchmarks */}
         {fp > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             {[
@@ -305,7 +309,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* AI Recommendations */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="bg-card border border-card-border rounded-2xl p-6 animate-fade-up">
             <div className="flex items-center justify-between mb-4">
@@ -338,7 +341,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Quick log habits */}
           <div className="bg-card border border-card-border rounded-2xl p-6 animate-fade-up">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -370,7 +372,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Recent Activity */}
         {activities.length > 0 && (
           <div className="bg-card border border-card-border rounded-2xl p-6 animate-fade-up">
             <div className="flex items-center justify-between mb-4">
