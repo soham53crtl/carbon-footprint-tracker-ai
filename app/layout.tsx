@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -14,12 +14,17 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'EcoSphere Team' }],
   manifest: '/manifest.json',
-  themeColor: '#10b981',
   openGraph: {
     title: 'EcoSphere — Carbon Footprint Tracker',
     description: 'Track, analyse, and reduce your personal carbon footprint.',
     type: 'website',
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#10b981',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({
