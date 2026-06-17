@@ -1,6 +1,9 @@
-// 1. CONSTANTS & EMISSION FACTORS (in kg CO2e)
-export const EMISSION_FACTORS = {
-  electricity: 0.4,       // per kWh
+/**
+ * Emission factors used to convert raw lifestyle inputs into kg CO2e.
+ * Values are sourced from standard environmental coefficients
+ * (UK DEFRA / EPA averages) and documented in docs/calculations.md.
+ */
+export const EMISSION_FACTORS = {  electricity: 0.4,       // per kWh
   naturalGas: 2.0,        // per m3
   water: 0.001,           // per liter
   vehicle: {
@@ -48,9 +51,14 @@ export interface FootprintResult {
   total: number;
 }
 
-// Calculate annual footprint in tonnes CO2e
-export function calculateFootprint(inputs: CalculatorInputs): FootprintResult {
-  // 1. Home Energy (Electricity, Gas, Water)
+/**
+ * Calculates a user's estimated annual carbon footprint across four
+ * categories: home energy, transportation, diet/waste, and shopping.
+ *
+ * @param inputs - User's lifestyle data (utilities, vehicle, diet, recycling habits)
+ * @returns FootprintResult containing per-category and total emissions in tonnes CO2e/year
+ */
+export function calculateFootprint(inputs: CalculatorInputs): FootprintResult {  // 1. Home Energy (Electricity, Gas, Water)
   const annualElectricityCO2 = (inputs.electricity * 12 * EMISSION_FACTORS.electricity); // kg/yr
   const annualGasCO2 = (inputs.gas * 12 * EMISSION_FACTORS.naturalGas); // kg/yr
   const annualWaterCO2 = (inputs.water * 12 * EMISSION_FACTORS.water); // kg/yr

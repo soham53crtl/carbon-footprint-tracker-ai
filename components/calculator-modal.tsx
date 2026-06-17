@@ -7,14 +7,26 @@ import { Select } from './ui/select';
 import { Card } from './ui/card';
 import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
+interface CalculatorInputsShape {
+  electricity: number;
+  gas: number;
+  water: number;
+  vehicleType: string;
+  vehicleDistance: number;
+  transitDistance: number;
+  flightsShort: number;
+  flightsLong: number;
+  dietType: string;
+  recycling: string[];
+}
+
 interface CalculatorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (updatedUser: any) => void;
-  initialInputs?: any;
+  onSuccess: (updatedUser: { userName: string; xp: number; level: number }) => void;
+  initialInputs?: Partial<CalculatorInputsShape>;
   currentName?: string;
 }
-
 export function CalculatorModal({
   isOpen,
   onClose,
